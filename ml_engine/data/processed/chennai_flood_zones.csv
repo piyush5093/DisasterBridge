@@ -1,0 +1,7 @@
+zone_id,name,state,district,center_lat,center_lon,area_sq_km,n_segments,dominant_road,severity,severity_score,disaster_type,source,description
+0,Chennai Flood Zone 1,Tamil Nadu,Chennai,13.01931,80.206364,1066.52,7677,street,critical,9.0,flood,chennai_kml_2015,"Chennai Floods 2015 -- 7677 flooded road segments, area ~1066.52 sq km, dominant road type: street."
+5,Chennai Flood Zone 6,Tamil Nadu,Chennai,12.82824,80.224269,11.23,18,street,high,7.5,flood,chennai_kml_2015,"Chennai Floods 2015 -- 18 flooded road segments, area ~11.23 sq km, dominant road type: street."
+3,Chennai Flood Zone 4,Tamil Nadu,Chennai,13.136895,80.198862,6.67,19,main,medium,5.5,flood,chennai_kml_2015,"Chennai Floods 2015 -- 19 flooded road segments, area ~6.67 sq km, dominant road type: main."
+2,Chennai Flood Zone 3,Tamil Nadu,Chennai,13.167965,80.258741,6.94,23,main,medium,5.5,flood,chennai_kml_2015,"Chennai Floods 2015 -- 23 flooded road segments, area ~6.94 sq km, dominant road type: main."
+4,Chennai Flood Zone 5,Tamil Nadu,Chennai,12.794919,80.032068,3.38,12,street,medium,5.5,flood,chennai_kml_2015,"Chennai Floods 2015 -- 12 flooded road segments, area ~3.38 sq km, dominant road type: street."
+1,Chennai Flood Zone 2,Tamil Nadu,Chennai,12.822577,80.0437,1.5,23,street,low,3.0,flood,chennai_kml_2015,"Chennai Floods 2015 -- 23 flooded road segments, area ~1.5 sq km, dominant road type: street."

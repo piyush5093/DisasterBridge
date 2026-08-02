@@ -1,0 +1,9 @@
+# Docker Compose - to be configured
+version: '3.8'
+services:
+  db:
+    image: postgis/postgis
+  backend:
+    build: ./backend
+  frontend:
+    build: ./frontend
