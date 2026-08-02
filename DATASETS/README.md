@@ -1,10 +1,5 @@
 # 📂 DATASETS — Integration Plan
 
-> **ఈ README చదివిన తర్వాత dataset integration start అవుతుంది.**
-> రెండు పనులు చేయాల్సి ఉంది — (1) ML Engine integrate, (2) Backend API connect.
-
----
-
 ## 📁 Available Datasets
 
 | File | Size | Type | Status |
