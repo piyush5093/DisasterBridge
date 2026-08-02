@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  db:
+    image: mongo:7
+    container_name: disaster_db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: disaster_admin
+      MONGO_INITDB_ROOT_PASSWORD: disaster_pass
+      MONGO_INITDB_DATABASE: disaster_response
+    ports:
+      - "27017:27017"
+    volumes:
+      - disaster_mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: disaster_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  disaster_mongodata:

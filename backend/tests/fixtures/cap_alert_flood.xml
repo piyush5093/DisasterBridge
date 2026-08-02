@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>NDMA-2026-FL-000123</identifier>
+  <sender>ndma.gov.in</sender>
+  <sent>2026-07-24T09:00:00+05:30</sent>
+  <status>Actual</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <language>en-IN</language>
+    <category>Met</category>
+    <event>Flood Warning</event>
+    <urgency>Immediate</urgency>
+    <severity>Severe</severity>
+    <certainty>Likely</certainty>
+    <effective>2026-07-24T09:00:00+05:30</effective>
+    <expires>2026-07-26T09:00:00+05:30</expires>
+    <senderName>Central Water Commission</senderName>
+    <headline>Severe Flood Warning for Kerala Districts</headline>
+    <description>Heavy to very heavy rainfall expected causing severe flooding in low-lying areas.</description>
+    <instruction>Move to higher ground immediately. Avoid crossing flooded roads.</instruction>
+    <area>
+      <areaDesc>Ernakulam and Alappuzha Districts, Kerala</areaDesc>
+      <polygon>10.05,76.28 10.05,76.45 9.85,76.45 9.85,76.28 10.05,76.28</polygon>
+    </area>
+  </info>
+</alert>
