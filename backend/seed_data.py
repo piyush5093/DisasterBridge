@@ -323,7 +323,7 @@ def seed_all():
         print(f"  Created {team_count} field teams")
 
         # ── Summary ──────────────────────────────────────────────────────────
-        print("\n[SEED] ✅ Seeding complete!")
+        print("\n[SEED] SUCCESS: Seeding complete!")
         print(f"  Depots   : {db.query(Depot).count()}")
         print(f"  Resources: {db.query(Resource).count()}")
         print(f"  Zones    : {db.query(DisasterZone).count()}")

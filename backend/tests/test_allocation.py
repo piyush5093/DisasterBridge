@@ -1,9 +1,11 @@
-"""
-Test: Resource Allocation & Analytics APIs
-==========================================
-Tests optimizer endpoints and analytics dashboard.
-"""
+import sys
+import os
 import pytest
+
+# Add backend root to path
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Add project root (parent of backend) to find optimizer package
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from optimizer.algorithms.greedy_allocator import (
     GreedyAllocator,

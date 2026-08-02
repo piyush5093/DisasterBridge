@@ -7,6 +7,8 @@ import pytest
 
 # Ensure backend root is on path
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+# Add project root (parent of backend) so optimizer/ package is importable
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -40,9 +42,13 @@ def setup_test_db():
     Base.metadata.create_all(bind=engine_test)
     yield
     Base.metadata.drop_all(bind=engine_test)
-    # Clean up test DB file
-    if os.path.exists("test_disaster_response.db"):
-        os.remove("test_disaster_response.db")
+    # Dispose all connections before cleanup (required on Windows)
+    engine_test.dispose()
+    try:
+        if os.path.exists("test_disaster_response.db"):
+            os.remove("test_disaster_response.db")
+    except PermissionError:
+        pass  # Windows: file still locked briefly, OK to skip
 
 
 @pytest.fixture(scope="function")
