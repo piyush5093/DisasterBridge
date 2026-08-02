@@ -1,4 +1,0 @@
-# Extra deps for local testing only (not needed to run the app itself).
--r requirements.txt
-mongomock-motor==0.0.36
-asgi-lifespan==2.1.0
