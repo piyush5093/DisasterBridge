@@ -74,9 +74,9 @@ The goal is to assist disaster management authorities in making faster and more 
 # 📂 Project Structure
 
 ```
-DisasterShieldAI
+DisasterResponseSystem
 │
-├── disaster_shield_ai
+├── disaster_Response_system_ai
 │   │
 │   ├── agent.py
 │   ├── __init__.py
