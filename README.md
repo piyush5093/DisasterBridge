@@ -1,4 +1,4 @@
-# 🌍 DisasterShieldAI
+# 🌍 AI-Based-Disaster-Response-Management-system
 
 > **An AI-powered Disaster Response Coordination Agent built using Google Agent Development Kit (ADK) and Gemini 3.5 Flash.**
 
@@ -6,7 +6,7 @@
 
 ## 📌 Overview
 
-DisasterShieldAI is an intelligent emergency response assistant that analyzes disaster reports and instantly generates a coordinated disaster response plan.
+Disaster response management system is an intelligent emergency response assistant that analyzes disaster reports and instantly generates a coordinated disaster response plan.
 
 The agent identifies the disaster type, estimates its severity, calculates required emergency resources, recommends temporary shelters, assigns a response priority level, and provides actionable public safety recommendations.
 
