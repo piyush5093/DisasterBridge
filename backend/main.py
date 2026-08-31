@@ -1020,28 +1020,37 @@ def coverage_summary(db: Session = Depends(get_db)):
 @app.get("/api/analytics/zones-status")
 def zones_status(db: Session = Depends(get_db)):
     """
-    Returns a breakdown of ALL disaster events by alert level,
-    showing how many have missions assigned vs unserved.
+    Breakdown of ALL disaster events by alert level.
+    served = distinct events that have at least 1 active mission via their grid_cell.
+    Uses subquery to avoid double-counting from JOIN multiplicity.
     """
     rows = db.execute(text("""
         SELECT
-            de.alert_level::TEXT,
-            COUNT(de.id)                                   AS total,
-            COUNT(DISTINCT m.id)                           AS served,
-            COUNT(de.id) - COUNT(DISTINCT m.id)            AS unserved
+            de.alert_level::TEXT                    AS alert_level,
+            COUNT(DISTINCT de.id)                   AS total,
+            COUNT(DISTINCT CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM grid_cells gc
+                    JOIN missions m ON m.zone_id = gc.id
+                    WHERE gc.related_event_id = de.id
+                      AND m.status NOT IN ('cancelled')
+                ) THEN de.id END)                   AS served
         FROM disaster_events de
-        LEFT JOIN grid_cells gc ON gc.related_event_id = de.id
-        LEFT JOIN missions m    ON m.zone_id = gc.id AND m.status NOT IN ('cancelled')
         GROUP BY de.alert_level
         ORDER BY
-            CASE de.alert_level WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'low' THEN 3 ELSE 4 END
+            CASE de.alert_level
+                WHEN 'red'    THEN 1
+                WHEN 'orange' THEN 2
+                WHEN 'low'    THEN 3
+                ELSE 4
+            END
     """)).fetchall()
 
     return [{
         "alert_level": r[0],
         "total":       int(r[1]),
         "served":      int(r[2]),
-        "unserved":    int(r[3]),
+        "unserved":    int(r[1]) - int(r[2]),
     } for r in rows]
 
 
