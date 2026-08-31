@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, Clock, Download, ShieldAlert, Truck, Users, Activity } from 'lucide-react';
+import { CheckCircle, Clock, Download, ShieldAlert, Truck, Users, Activity, AlertTriangle, Droplets } from 'lucide-react';
 import EmbeddedMap from './Map';
 import axios from 'axios';
 
@@ -131,10 +131,45 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── KPI Row ─────────────────────────────────────────────────────── */}
+      {/* Nepal Crisis Spotlight Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 p-4 shadow-lg border border-blue-700/50">
+        {/* Animated wave background */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-blue-400 rounded-t-full animate-pulse" />
+        </div>
+        <div className="relative flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="shrink-0 bg-red-500/20 border border-red-400/40 rounded-xl p-2.5">
+              <AlertTriangle size={22} className="text-red-400 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Active Emergency</span>
+                <span className="text-[10px] text-blue-300 font-medium">Aug 2026</span>
+              </div>
+              <h2 className="text-white font-extrabold text-base leading-tight">🇳🇵 Nepal Monsoon Floods 2026 — Crisis Response Active</h2>
+              <p className="text-blue-200 text-xs mt-0.5 font-medium">
+                8 districts affected · 1.6M+ people exposed · Bagmati, Koshi, Narayani & Karnali rivers in severe overflow
+              </p>
+            </div>
+          </div>
+          <div className="shrink-0 hidden md:flex flex-col items-end gap-1">
+            <div className="flex items-center gap-2">
+              <Droplets size={14} className="text-blue-300" />
+              <span className="text-blue-200 text-xs font-semibold">3 RED · 5 ORANGE zones</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Truck size={14} className="text-emerald-300" />
+              <span className="text-emerald-300 text-xs font-semibold">6 depots on standby</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Row */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { icon: <ShieldAlert size={18}/>, label: 'Active Incidents',   val: stats?.active_incidents?.toLocaleString() ?? '—',              sub: 'across South Asia',       accent: 'border-red-400',    valColor: 'text-red-500',    bg: 'from-red-50'    },
+          { icon: <ShieldAlert size={18}/>, label: 'Active Incidents',   val: stats?.active_incidents?.toLocaleString() ?? '—',              sub: 'incl. Nepal floods',      accent: 'border-red-400',    valColor: 'text-red-500',    bg: 'from-red-50'    },
           { icon: <Activity size={18}/>,    label: 'Resources Deployed', val: stats?.resources_deployed?.toLocaleString() ?? '—',            sub: 'units in the field',      accent: 'border-blue-400',   valColor: 'text-blue-600',   bg: 'from-blue-50'   },
           { icon: <Truck size={18}/>,       label: 'Active Missions',    val: stats?.active_missions?.toString() ?? '—',                     sub: 'assigned + in transit',   accent: 'border-amber-400',  valColor: 'text-amber-600',  bg: 'from-amber-50'  },
           { icon: <Users size={18}/>,       label: 'Population at Risk', val: stats?.population_at_risk?.toLocaleString() ?? '—',            sub: 'orange + red events',     accent: 'border-purple-400', valColor: 'text-purple-600', bg: 'from-purple-50' },
@@ -150,7 +185,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── Map + Analytics ─────────────────────────────────────────────── */}
+      {/* Map + Analytics Panel */}
       <div className="grid grid-cols-3 gap-4" style={{ height: 480 }}>
 
         {/* Map */}
