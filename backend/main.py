@@ -1031,6 +1031,38 @@ def coverage_summary(db: Session = Depends(get_db)):
     }
 
 
+@app.get("/api/analytics/zones-status")
+def zones_status(db: Session = Depends(get_db)):
+    """List every classified zone with its event name, alert level, and whether a mission has been dispatched."""
+    rows = db.execute(text("""
+        SELECT
+            gc.id::TEXT,
+            gc.priority::TEXT,
+            gc.severity_score,
+            de.raw_payload->>'title'  AS event_title,
+            de.alert_level::TEXT,
+            de.event_type::TEXT,
+            ST_X(ST_Centroid(gc.cell_geometry::geometry)) AS lng,
+            ST_Y(ST_Centroid(gc.cell_geometry::geometry)) AS lat,
+            EXISTS(SELECT 1 FROM missions m WHERE m.zone_id = gc.id) AS served
+        FROM grid_cells gc
+        LEFT JOIN disaster_events de ON gc.related_event_id = de.id
+        WHERE gc.related_event_id IS NOT NULL
+        ORDER BY gc.severity_score DESC NULLS LAST
+    """)).fetchall()
+    return [{
+        "zone_id":     r[0],
+        "priority":    r[1],
+        "severity":    float(r[2]) if r[2] else 0,
+        "event_title": r[3] or "Unknown Event",
+        "alert_level": r[4] or "green",
+        "event_type":  r[5] or "unknown",
+        "lng":         float(r[6]) if r[6] else 0,
+        "lat":         float(r[7]) if r[7] else 0,
+        "served":      bool(r[8]),
+    } for r in rows]
+
+
 # ── Volunteers ─────────────────────────────────────────────────────────────────
 
 class VolunteerCreate(BaseModel):

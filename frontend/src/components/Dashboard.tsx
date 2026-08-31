@@ -20,22 +20,25 @@ export default function Dashboard() {
   const [performance, setPerformance]   = useState<any>(null);
   const [coverage, setCoverage]         = useState<any>(null);
   const [recentMissions, setRecentMissions] = useState<any[]>([]);
+  const [zonesStatus, setZonesStatus]   = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [sumRes, brkRes, perfRes, covRes, missRes] = await Promise.all([
+        const [sumRes, brkRes, perfRes, covRes, missRes, zoneRes] = await Promise.all([
           axios.get(`${API}/api/analytics/dashboard-summary`),
           axios.get(`${API}/api/analytics/incident-breakdown`),
           axios.get(`${API}/api/analytics/delivery-performance`),
           axios.get(`${API}/api/analytics/coverage-summary`),
           axios.get(`${API}/api/analytics/missions-report`),
+          axios.get(`${API}/api/analytics/zones-status`),
         ]);
         setStats(sumRes.data);
         setBreakdown(brkRes.data);
         setPerformance(perfRes.data);
         setCoverage(covRes.data);
-        setRecentMissions(missRes.data.slice(0, 4)); // Show top 4 recent missions
+        setRecentMissions(missRes.data.slice(0, 4));
+        setZonesStatus(Array.isArray(zoneRes.data) ? zoneRes.data : []);
       } catch (err) {
         console.error('Dashboard fetch error', err);
       }
@@ -202,46 +205,83 @@ export default function Dashboard() {
           {/* Key Metrics — expanded to fill space elegantly */}
           <div className="flex flex-col gap-4 flex-1 justify-center">
             
-            {/* Coverage */}
-            <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-center flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle size={18} className={coverage?.coverage_pct != null ? 'text-emerald-500' : 'text-slate-300'} />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Zone Coverage</p>
+            {/* Coverage — Zone-by-Zone Breakdown */}
+            <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col flex-1">
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-emerald-500" />
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Zone Coverage</p>
+                </div>
+                {coverage && (
+                  <span className="text-lg font-extrabold text-emerald-700">
+                    {coverage.coverage_pct ?? 0}%
+                    <span className="text-[10px] font-semibold text-emerald-600/70 ml-1">
+                      ({coverage.zones_with_missions}/{coverage.total_zones} zones)
+                    </span>
+                  </span>
+                )}
               </div>
-              {coverage != null ? (
-                <>
-                  {/* Main coverage % */}
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-extrabold text-emerald-700 tracking-tight">
-                      {coverage.coverage_pct ?? 0}%
-                    </span>
-                    <span className="text-xs font-semibold text-emerald-600/80">
-                      {coverage.zones_with_missions} of {coverage.total_zones} zones served
-                    </span>
+
+              {/* Progress bar */}
+              {coverage && (
+                <div className="w-full bg-emerald-200 rounded-full h-1.5 mb-3 shadow-inner">
+                  <div className="h-1.5 rounded-full bg-emerald-500 transition-all"
+                    style={{ width: `${Math.min(coverage.coverage_pct ?? 0, 100)}%` }} />
+                </div>
+              )}
+
+              {/* Zone table — each zone with real name */}
+              <div className="flex flex-col gap-1 overflow-y-auto max-h-48 pr-0.5">
+                {zonesStatus.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic">No classified zones yet</p>
+                ) : (
+                  zonesStatus.map((z, i) => {
+                    const alertColors: Record<string,string> = {
+                      red: '#ef4444', orange: '#f97316', green: '#22c55e', low: '#eab308'
+                    };
+                    const color = alertColors[z.alert_level] || '#94a3b8';
+                    const typeIcon = z.event_type === 'flood' ? '🌊' : z.event_type === 'earthquake' ? '🔴' : '⚠️';
+                    return (
+                      <div key={z.zone_id}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border text-xs ${
+                          z.served
+                            ? 'bg-white border-emerald-200'
+                            : 'bg-red-50 border-red-200'
+                        }`}>
+                        {/* Status icon */}
+                        <span className="shrink-0 text-sm">{z.served ? '✅' : '❌'}</span>
+                        {/* Event name */}
+                        <span className="flex-1 font-medium text-slate-700 truncate" title={z.event_title}>
+                          {typeIcon} {z.event_title}
+                        </span>
+                        {/* Alert badge */}
+                        <span className="shrink-0 text-[9px] font-bold uppercase text-white px-1.5 py-0.5 rounded-full"
+                          style={{ background: color }}>
+                          {z.alert_level}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer summary */}
+              {coverage && (
+                <div className="flex gap-2 mt-2 pt-2 border-t border-emerald-200">
+                  <div className="flex-1 text-center">
+                    <p className="text-[9px] text-slate-500 uppercase font-bold">Unserved</p>
+                    <p className="text-sm font-extrabold text-red-600">{(coverage.unserved_events ?? 0).toLocaleString()}</p>
                   </div>
-                  {/* Progress bar */}
-                  <div className="w-full bg-emerald-200 rounded-full h-2 mt-2 shadow-inner">
-                    <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.min(coverage.coverage_pct ?? 0, 100)}%` }} />
+                  <div className="flex-1 text-center">
+                    <p className="text-[9px] text-slate-500 uppercase font-bold">Avg Fill</p>
+                    <p className="text-sm font-extrabold text-emerald-700">{coverage.avg_alloc_coverage ?? 0}%</p>
                   </div>
-                  {/* Sub-metrics row */}
-                  <div className="flex gap-3 mt-3">
-                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
-                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Unserved Events</p>
-                      <p className="text-base font-extrabold text-red-600">{(coverage.unserved_events ?? 0).toLocaleString()}</p>
-                    </div>
-                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
-                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Avg Resource Fill</p>
-                      <p className="text-base font-extrabold text-emerald-700">{coverage.avg_alloc_coverage ?? 0}%</p>
-                    </div>
-                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
-                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Total Events</p>
-                      <p className="text-base font-extrabold text-slate-700">{(coverage.total_events ?? 0).toLocaleString()}</p>
-                    </div>
+                  <div className="flex-1 text-center">
+                    <p className="text-[9px] text-slate-500 uppercase font-bold">All Events</p>
+                    <p className="text-sm font-extrabold text-slate-700">{(coverage.total_events ?? 0).toLocaleString()}</p>
                   </div>
-                  <p className="text-[10px] text-slate-400 mt-2 italic">Zone coverage = zones with active missions ÷ all classified zones</p>
-                </>
-              ) : (
-                <p className="text-sm text-slate-400 italic">No allocation data yet</p>
+                </div>
               )}
             </div>
 
