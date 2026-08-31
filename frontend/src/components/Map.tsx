@@ -24,7 +24,8 @@ interface EmbeddedMapProps {
 }
 
 export default function EmbeddedMap({ showSidePanel = false }: EmbeddedMapProps) {
-  const center: [number, number] = [20.5937, 78.9629]; // India geographic centre
+  // Center between India and Nepal to show both clearly
+  const center: [number, number] = [23.5, 82.0];
   const [events, setEvents]     = useState<any[]>([]);
   const [missions, setMissions] = useState<any[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -68,29 +69,50 @@ export default function EmbeddedMap({ showSidePanel = false }: EmbeddedMapProps)
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {/* Disaster event markers */}
+        {/* Disaster event markers — larger for high-severity flood events */}
         <MarkerClusterGroup chunkedLoading>
-          {events.map((ev, idx) => (
-            <CircleMarker
-              key={idx}
-              center={[ev.lat, ev.lng]}
-              radius={5}
-              pathOptions={{
-                color: ALERT_COLORS[ev.alert_level] || '#94a3b8',
-                fillColor: ALERT_COLORS[ev.alert_level] || '#94a3b8',
-                fillOpacity: 0.7,
-                weight: 1,
-              }}
-            >
-              <Popup>
-                <div className="text-xs">
-                  <p className="font-bold text-slate-800">{ev.title || 'Disaster Event'}</p>
-                  <p className="text-slate-500 mt-0.5">Alert: <span className="font-semibold uppercase">{ev.alert_level}</span></p>
-                  <p className="text-slate-400">Source: {ev.source}</p>
-                </div>
-              </Popup>
-            </CircleMarker>
-          ))}
+          {events.map((ev, idx) => {
+            const isFlood  = ev.event_type === 'flood';
+            const isCrit   = ev.alert_level === 'red';
+            const isHigh   = ev.alert_level === 'orange';
+            // Bigger radius for Nepal floods
+            const radius   = isCrit ? (isFlood ? 10 : 7) : isHigh ? (isFlood ? 8 : 5) : 4;
+            const weight   = (isCrit || isHigh) && isFlood ? 2 : 1;
+            const opacity  = (isCrit || isHigh) ? 0.9 : 0.65;
+            return (
+              <CircleMarker
+                key={idx}
+                center={[ev.lat, ev.lng]}
+                radius={radius}
+                pathOptions={{
+                  color: ALERT_COLORS[ev.alert_level] || '#94a3b8',
+                  fillColor: ALERT_COLORS[ev.alert_level] || '#94a3b8',
+                  fillOpacity: opacity,
+                  weight,
+                }}
+              >
+                <Popup>
+                  <div className="text-xs min-w-[160px]">
+                    <p className="font-bold text-slate-800 text-sm leading-tight">{ev.title || 'Disaster Event'}</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span
+                        className="px-1.5 py-0.5 rounded text-white text-[10px] font-bold uppercase"
+                        style={{ background: ALERT_COLORS[ev.alert_level] || '#94a3b8' }}
+                      >{ev.alert_level}</span>
+                      {isFlood && <span className="text-blue-600 font-semibold text-[10px]">🌊 Flood</span>}
+                    </div>
+                    {ev.population_exposed > 0 && (
+                      <p className="text-slate-600 mt-1">
+                        <span className="font-semibold">Population exposed:</span>{' '}
+                        {ev.population_exposed.toLocaleString()}
+                      </p>
+                    )}
+                    <p className="text-slate-400 text-[10px] mt-0.5">Source: {ev.source?.toUpperCase()}</p>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            );
+          })}
         </MarkerClusterGroup>
 
         {/* Active Mission Routes with start/end markers */}

@@ -517,9 +517,28 @@ def get_dashboard_missions(db: Session = Depends(get_db)):
 
 @app.get("/api/dashboard/events")
 def get_dashboard_events(db: Session = Depends(get_db)):
-    # Limit set to 2000 — well above current dataset (496 events). Leaflet clustering handles this volume fine.
-    rows = db.execute(text("SELECT id, raw_payload->>'title', source, alert_level, ST_X(location::geometry), ST_Y(location::geometry) FROM disaster_events ORDER BY event_time DESC LIMIT 2000")).fetchall()
-    return [{"id": str(r[0]), "title": r[1], "source": r[2], "alert_level": r[3], "lng": r[4], "lat": r[5]} for r in rows]
+    rows = db.execute(text("""
+        SELECT id,
+               COALESCE(raw_payload->>'title', raw_payload->>'description', 'Disaster Event') AS title,
+               source, alert_level,
+               ST_X(location::geometry) AS lng,
+               ST_Y(location::geometry) AS lat,
+               CAST(event_type AS TEXT) AS event_type,
+               population_exposed
+        FROM disaster_events
+        ORDER BY event_time DESC
+        LIMIT 2000
+    """)).fetchall()
+    return [{
+        "id": str(r[0]),
+        "title": r[1],
+        "source": r[2],
+        "alert_level": r[3],
+        "lng": float(r[4]) if r[4] else 0,
+        "lat": float(r[5]) if r[5] else 0,
+        "event_type": r[6] or "unknown",
+        "population_exposed": r[7] or 0,
+    } for r in rows]
 
 import services_missions
 
