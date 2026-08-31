@@ -203,20 +203,42 @@ export default function Dashboard() {
           <div className="flex flex-col gap-4 flex-1 justify-center">
             
             {/* Coverage */}
-            <div className="bg-emerald-50 rounded-2xl p-5 border border-emerald-100 shadow-sm flex flex-col justify-center flex-1">
+            <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col justify-center flex-1">
               <div className="flex items-center gap-2 mb-2">
-                <CheckCircle size={18} className={coverage?.average_coverage != null ? 'text-emerald-500' : 'text-slate-300'} />
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Coverage Achieved</p>
+                <CheckCircle size={18} className={coverage?.coverage_pct != null ? 'text-emerald-500' : 'text-slate-300'} />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Zone Coverage</p>
               </div>
-              {coverage?.average_coverage != null ? (
+              {coverage != null ? (
                 <>
+                  {/* Main coverage % */}
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-extrabold text-emerald-700 tracking-tight">{coverage.average_coverage}%</span>
-                    <span className="text-xs font-semibold text-emerald-600/80 uppercase">{coverage.zone_count} zone{coverage.zone_count !== 1 ? 's' : ''}</span>
+                    <span className="text-4xl font-extrabold text-emerald-700 tracking-tight">
+                      {coverage.coverage_pct ?? 0}%
+                    </span>
+                    <span className="text-xs font-semibold text-emerald-600/80">
+                      {coverage.zones_with_missions} of {coverage.total_zones} zones served
+                    </span>
                   </div>
-                  <div className="w-full bg-emerald-200 rounded-full h-2 mt-3 shadow-inner">
-                    <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${coverage.average_coverage}%` }} />
+                  {/* Progress bar */}
+                  <div className="w-full bg-emerald-200 rounded-full h-2 mt-2 shadow-inner">
+                    <div className="h-2 rounded-full bg-emerald-500 transition-all" style={{ width: `${Math.min(coverage.coverage_pct ?? 0, 100)}%` }} />
                   </div>
+                  {/* Sub-metrics row */}
+                  <div className="flex gap-3 mt-3">
+                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Unserved Events</p>
+                      <p className="text-base font-extrabold text-red-600">{(coverage.unserved_events ?? 0).toLocaleString()}</p>
+                    </div>
+                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Avg Resource Fill</p>
+                      <p className="text-base font-extrabold text-emerald-700">{coverage.avg_alloc_coverage ?? 0}%</p>
+                    </div>
+                    <div className="flex-1 bg-white/60 rounded-lg px-2 py-1.5 text-center border border-emerald-200">
+                      <p className="text-[10px] text-slate-500 font-semibold uppercase">Total Events</p>
+                      <p className="text-base font-extrabold text-slate-700">{(coverage.total_events ?? 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2 italic">Zone coverage = zones with active missions ÷ all classified zones</p>
                 </>
               ) : (
                 <p className="text-sm text-slate-400 italic">No allocation data yet</p>

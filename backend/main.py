@@ -975,19 +975,59 @@ def incident_breakdown(db: Session = Depends(get_db)):
 
 @app.get("/api/analytics/coverage-summary")
 def coverage_summary(db: Session = Depends(get_db)):
-    """Average coverage_percent across all allocation_plans for the latest plan_run_id."""
-    result = db.execute(text("""
-        SELECT AVG(coverage_percent), COUNT(*), MIN(coverage_percent), MAX(coverage_percent)
-        FROM allocation_plans
-        WHERE plan_run_id = (SELECT plan_run_id FROM allocation_plans ORDER BY created_at DESC LIMIT 1)
+    """
+    Real system-wide coverage:
+    - zones_with_missions  = distinct grid zones that have at least 1 active mission
+    - total_zones          = all classified grid zones (those linked to a disaster event)
+    - coverage_pct         = zones_with_missions / total_zones * 100
+    - total_events         = all disaster_events in DB
+    - unserved_events      = events whose zone has NO mission yet
+    - avg_alloc_coverage   = average coverage_percent from allocation_plans (resource fill %)
+    """
+    row = db.execute(text("""
+        SELECT
+            -- How many zones have at least 1 mission dispatched
+            COUNT(DISTINCT m.zone_id)                              AS zones_with_missions,
+
+            -- Total classified zones (zones linked to a real event)
+            (SELECT COUNT(*) FROM grid_cells
+             WHERE related_event_id IS NOT NULL)                   AS total_zones,
+
+            -- Total disaster events
+            (SELECT COUNT(*) FROM disaster_events)                 AS total_events,
+
+            -- Events whose zone has no mission
+            (SELECT COUNT(*) FROM disaster_events de
+             LEFT JOIN grid_cells gc ON gc.related_event_id = de.id
+             LEFT JOIN missions m2 ON m2.zone_id = gc.id
+             WHERE m2.id IS NULL)                                  AS unserved_events,
+
+            -- Average resource fill % from allocation plans (ALL time)
+            (SELECT ROUND(AVG(coverage_percent)::NUMERIC, 1)
+             FROM allocation_plans)                                AS avg_alloc_coverage
+
+        FROM missions m
+        WHERE m.status NOT IN ('cancelled')
     """)).fetchone()
-    if result[0] is None:
-        return {"average_coverage": None, "zone_count": 0, "min_coverage": None, "max_coverage": None}
+
+    zones_with_missions = int(row[0]) if row[0] else 0
+    total_zones         = int(row[1]) if row[1] else 0
+    total_events        = int(row[2]) if row[2] else 0
+    unserved_events     = int(row[3]) if row[3] else 0
+    avg_alloc           = float(row[4]) if row[4] else 0.0
+
+    coverage_pct = round((zones_with_missions / total_zones * 100), 1) if total_zones > 0 else 0.0
+
     return {
-        "average_coverage": round(float(result[0]), 1),
-        "zone_count": int(result[1]),
-        "min_coverage": round(float(result[2]), 1),
-        "max_coverage": round(float(result[3]), 1)
+        "coverage_pct":        coverage_pct,        # % of classified zones with a mission
+        "zones_with_missions": zones_with_missions,  # how many zones dispatched
+        "total_zones":         total_zones,          # total classified zones
+        "total_events":        total_events,         # all events in DB
+        "unserved_events":     unserved_events,      # events with NO mission yet
+        "avg_alloc_coverage":  avg_alloc,            # avg resource fill % per zone served
+        # Legacy keys kept for compatibility
+        "average_coverage":    coverage_pct,
+        "zone_count":          zones_with_missions,
     }
 
 
