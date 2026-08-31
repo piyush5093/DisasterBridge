@@ -976,90 +976,72 @@ def incident_breakdown(db: Session = Depends(get_db)):
 @app.get("/api/analytics/coverage-summary")
 def coverage_summary(db: Session = Depends(get_db)):
     """
-    Real system-wide coverage:
-    - zones_with_missions  = distinct grid zones that have at least 1 active mission
-    - total_zones          = all classified grid zones (those linked to a disaster event)
-    - coverage_pct         = zones_with_missions / total_zones * 100
-    - total_events         = all disaster_events in DB
-    - unserved_events      = events whose zone has NO mission yet
-    - avg_alloc_coverage   = average coverage_percent from allocation_plans (resource fill %)
+    System-wide coverage across ALL disaster events (not just classified zones):
+    - total_events     = all disaster_events
+    - events_served    = events that have a mission dispatched (via grid_cell link)
+    - coverage_pct     = events_served / total_events * 100
+    - unserved_events  = total_events - events_served
+    - avg_alloc_coverage = average resource fill % from allocation_plans
     """
     row = db.execute(text("""
         SELECT
-            -- How many zones have at least 1 mission dispatched
-            COUNT(DISTINCT m.zone_id)                              AS zones_with_missions,
+            (SELECT COUNT(*) FROM disaster_events)                          AS total_events,
 
-            -- Total classified zones (zones linked to a real event)
-            (SELECT COUNT(*) FROM grid_cells
-             WHERE related_event_id IS NOT NULL)                   AS total_zones,
+            (SELECT COUNT(DISTINCT de.id)
+             FROM disaster_events de
+             JOIN grid_cells gc ON gc.related_event_id = de.id
+             JOIN missions m ON m.zone_id = gc.id
+             WHERE m.status NOT IN ('cancelled'))                           AS events_served,
 
-            -- Total disaster events
-            (SELECT COUNT(*) FROM disaster_events)                 AS total_events,
-
-            -- Events whose zone has no mission
-            (SELECT COUNT(*) FROM disaster_events de
-             LEFT JOIN grid_cells gc ON gc.related_event_id = de.id
-             LEFT JOIN missions m2 ON m2.zone_id = gc.id
-             WHERE m2.id IS NULL)                                  AS unserved_events,
-
-            -- Average resource fill % from allocation plans (ALL time)
-            (SELECT ROUND(AVG(coverage_percent)::NUMERIC, 1)
-             FROM allocation_plans)                                AS avg_alloc_coverage
-
-        FROM missions m
-        WHERE m.status NOT IN ('cancelled')
+            (SELECT COALESCE(ROUND(AVG(coverage_percent)::NUMERIC, 1), 0)
+             FROM allocation_plans)                                         AS avg_alloc_coverage
     """)).fetchone()
 
-    zones_with_missions = int(row[0]) if row[0] else 0
-    total_zones         = int(row[1]) if row[1] else 0
-    total_events        = int(row[2]) if row[2] else 0
-    unserved_events     = int(row[3]) if row[3] else 0
-    avg_alloc           = float(row[4]) if row[4] else 0.0
-
-    coverage_pct = round((zones_with_missions / total_zones * 100), 1) if total_zones > 0 else 0.0
+    total_events      = int(row[0]) if row[0] else 0
+    events_served     = int(row[1]) if row[1] else 0
+    unserved_events   = total_events - events_served
+    avg_alloc         = float(row[2]) if row[2] else 0.0
+    coverage_pct      = round(events_served / total_events * 100, 1) if total_events > 0 else 0.0
 
     return {
-        "coverage_pct":        coverage_pct,        # % of classified zones with a mission
-        "zones_with_missions": zones_with_missions,  # how many zones dispatched
-        "total_zones":         total_zones,          # total classified zones
-        "total_events":        total_events,         # all events in DB
-        "unserved_events":     unserved_events,      # events with NO mission yet
-        "avg_alloc_coverage":  avg_alloc,            # avg resource fill % per zone served
-        # Legacy keys kept for compatibility
+        "coverage_pct":        coverage_pct,
+        "events_served":       events_served,
+        "total_events":        total_events,
+        "unserved_events":     unserved_events,
+        "avg_alloc_coverage":  avg_alloc,
+        # legacy keys
         "average_coverage":    coverage_pct,
-        "zone_count":          zones_with_missions,
+        "zones_with_missions": events_served,
+        "total_zones":         total_events,
+        "zone_count":          events_served,
     }
 
 
 @app.get("/api/analytics/zones-status")
 def zones_status(db: Session = Depends(get_db)):
-    """List every classified zone with its event name, alert level, and whether a mission has been dispatched."""
+    """
+    Returns a breakdown of ALL disaster events by alert level,
+    showing how many have missions assigned vs unserved.
+    """
     rows = db.execute(text("""
         SELECT
-            gc.id::TEXT,
-            gc.priority::TEXT,
-            gc.severity_score,
-            de.raw_payload->>'title'  AS event_title,
             de.alert_level::TEXT,
-            de.event_type::TEXT,
-            ST_X(ST_Centroid(gc.cell_geometry::geometry)) AS lng,
-            ST_Y(ST_Centroid(gc.cell_geometry::geometry)) AS lat,
-            EXISTS(SELECT 1 FROM missions m WHERE m.zone_id = gc.id) AS served
-        FROM grid_cells gc
-        LEFT JOIN disaster_events de ON gc.related_event_id = de.id
-        WHERE gc.related_event_id IS NOT NULL
-        ORDER BY gc.severity_score DESC NULLS LAST
+            COUNT(de.id)                                   AS total,
+            COUNT(DISTINCT m.id)                           AS served,
+            COUNT(de.id) - COUNT(DISTINCT m.id)            AS unserved
+        FROM disaster_events de
+        LEFT JOIN grid_cells gc ON gc.related_event_id = de.id
+        LEFT JOIN missions m    ON m.zone_id = gc.id AND m.status NOT IN ('cancelled')
+        GROUP BY de.alert_level
+        ORDER BY
+            CASE de.alert_level WHEN 'red' THEN 1 WHEN 'orange' THEN 2 WHEN 'low' THEN 3 ELSE 4 END
     """)).fetchall()
+
     return [{
-        "zone_id":     r[0],
-        "priority":    r[1],
-        "severity":    float(r[2]) if r[2] else 0,
-        "event_title": r[3] or "Unknown Event",
-        "alert_level": r[4] or "green",
-        "event_type":  r[5] or "unknown",
-        "lng":         float(r[6]) if r[6] else 0,
-        "lat":         float(r[7]) if r[7] else 0,
-        "served":      bool(r[8]),
+        "alert_level": r[0],
+        "total":       int(r[1]),
+        "served":      int(r[2]),
+        "unserved":    int(r[3]),
     } for r in rows]
 
 

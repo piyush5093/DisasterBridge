@@ -205,80 +205,77 @@ export default function Dashboard() {
           {/* Key Metrics — expanded to fill space elegantly */}
           <div className="flex flex-col gap-4 flex-1 justify-center">
             
-            {/* Coverage — Zone-by-Zone Breakdown */}
+            {/* Coverage — Across ALL Incidents */}
             <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 shadow-sm flex flex-col flex-1">
-              {/* Header row */}
-              <div className="flex items-center justify-between mb-2">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-emerald-500" />
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Zone Coverage</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Incident Coverage</p>
                 </div>
                 {coverage && (
                   <span className="text-lg font-extrabold text-emerald-700">
                     {coverage.coverage_pct ?? 0}%
-                    <span className="text-[10px] font-semibold text-emerald-600/70 ml-1">
-                      ({coverage.zones_with_missions}/{coverage.total_zones} zones)
+                    <span className="text-[10px] font-semibold text-slate-400 ml-1">
+                      ({coverage.events_served ?? 0} of {coverage.total_events ?? 0})
                     </span>
                   </span>
                 )}
               </div>
+              <p className="text-[10px] text-slate-400 mb-2">missions dispatched ÷ all active incidents</p>
 
               {/* Progress bar */}
-              {coverage && (
-                <div className="w-full bg-emerald-200 rounded-full h-1.5 mb-3 shadow-inner">
-                  <div className="h-1.5 rounded-full bg-emerald-500 transition-all"
-                    style={{ width: `${Math.min(coverage.coverage_pct ?? 0, 100)}%` }} />
-                </div>
-              )}
+              <div className="w-full bg-emerald-200 rounded-full h-1.5 mb-3 shadow-inner">
+                <div className="h-1.5 rounded-full bg-emerald-500 transition-all"
+                  style={{ width: `${Math.min(coverage?.coverage_pct ?? 0, 100)}%` }} />
+              </div>
 
-              {/* Zone table — each zone with real name */}
-              <div className="flex flex-col gap-1 overflow-y-auto max-h-48 pr-0.5">
+              {/* Alert-level breakdown table */}
+              <div className="flex flex-col gap-1.5">
                 {zonesStatus.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic">No classified zones yet</p>
+                  <p className="text-xs text-slate-400 italic">Loading breakdown...</p>
                 ) : (
-                  zonesStatus.map((z, i) => {
-                    const alertColors: Record<string,string> = {
-                      red: '#ef4444', orange: '#f97316', green: '#22c55e', low: '#eab308'
+                  zonesStatus.map((row: any) => {
+                    const alertColors: Record<string,{bg:string,text:string,bar:string}> = {
+                      red:    { bg:'bg-red-50',    text:'text-red-700',    bar:'bg-red-500'    },
+                      orange: { bg:'bg-orange-50', text:'text-orange-700', bar:'bg-orange-500' },
+                      low:    { bg:'bg-yellow-50', text:'text-yellow-700', bar:'bg-yellow-400' },
+                      green:  { bg:'bg-green-50',  text:'text-green-700',  bar:'bg-green-500'  },
                     };
-                    const color = alertColors[z.alert_level] || '#94a3b8';
-                    const typeIcon = z.event_type === 'flood' ? '🌊' : z.event_type === 'earthquake' ? '🔴' : '⚠️';
+                    const c = alertColors[row.alert_level] || alertColors.green;
+                    const pct = row.total > 0 ? Math.round(row.served / row.total * 100) : 0;
                     return (
-                      <div key={z.zone_id}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg border text-xs ${
-                          z.served
-                            ? 'bg-white border-emerald-200'
-                            : 'bg-red-50 border-red-200'
-                        }`}>
-                        {/* Status icon */}
-                        <span className="shrink-0 text-sm">{z.served ? '✅' : '❌'}</span>
-                        {/* Event name */}
-                        <span className="flex-1 font-medium text-slate-700 truncate" title={z.event_title}>
-                          {typeIcon} {z.event_title}
-                        </span>
-                        {/* Alert badge */}
-                        <span className="shrink-0 text-[9px] font-bold uppercase text-white px-1.5 py-0.5 rounded-full"
-                          style={{ background: color }}>
-                          {z.alert_level}
-                        </span>
+                      <div key={row.alert_level} className={`${c.bg} rounded-lg px-3 py-2 border border-opacity-30`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-[10px] font-bold uppercase ${c.text}`}>
+                            {row.alert_level === 'low' ? 'Yellow' : row.alert_level} Alert
+                          </span>
+                          <span className="text-[10px] text-slate-500">
+                            {row.served} served / {row.total} total
+                          </span>
+                        </div>
+                        <div className="w-full bg-white/60 rounded-full h-1">
+                          <div className={`h-1 rounded-full ${c.bar} transition-all`} style={{ width: `${pct}%` }} />
+                        </div>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              {/* Footer summary */}
+              {/* Footer stats */}
               {coverage && (
-                <div className="flex gap-2 mt-2 pt-2 border-t border-emerald-200">
+                <div className="flex gap-2 mt-3 pt-2 border-t border-emerald-200">
                   <div className="flex-1 text-center">
                     <p className="text-[9px] text-slate-500 uppercase font-bold">Unserved</p>
                     <p className="text-sm font-extrabold text-red-600">{(coverage.unserved_events ?? 0).toLocaleString()}</p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[9px] text-slate-500 uppercase font-bold">Avg Fill</p>
+                    <p className="text-[9px] text-slate-500 uppercase font-bold">Avg Fill %</p>
                     <p className="text-sm font-extrabold text-emerald-700">{coverage.avg_alloc_coverage ?? 0}%</p>
                   </div>
                   <div className="flex-1 text-center">
-                    <p className="text-[9px] text-slate-500 uppercase font-bold">All Events</p>
+                    <p className="text-[9px] text-slate-500 uppercase font-bold">All Incidents</p>
                     <p className="text-sm font-extrabold text-slate-700">{(coverage.total_events ?? 0).toLocaleString()}</p>
                   </div>
                 </div>
