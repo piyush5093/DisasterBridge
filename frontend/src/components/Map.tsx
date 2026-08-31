@@ -30,26 +30,38 @@ export default function EmbeddedMap({ showSidePanel = false }: EmbeddedMapProps)
   const [missions, setMissions] = useState<any[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [evRes, mRes] = await Promise.all([
-          axios.get('http://localhost:8000/api/dashboard/events'),
-          axios.get('http://localhost:8000/api/dashboard/missions'),
-        ]);
-        setEvents(evRes.data);
-        setMissions(mRes.data);
-      } catch (err) {
-        console.error('Failed to fetch map data', err);
-      }
+  const fetchData = async () => {
+    try {
+      const [evRes, mRes] = await Promise.all([
+        axios.get('http://localhost:8000/api/dashboard/events'),
+        axios.get('http://localhost:8000/api/dashboard/missions'),
+      ]);
+      setEvents(Array.isArray(evRes.data) ? evRes.data : []);
+      const missionArr = Array.isArray(mRes.data) ? mRes.data : [];
+      setMissions(missionArr);
+    } catch (err) {
+      console.error('Failed to fetch map data', err);
     }
+  };
+
+  useEffect(() => {
     fetchData();
+    // Refresh every 30 seconds to pick up new missions
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Geometry helpers
-  const getLeafletPositions = (geometry: any): [number, number][] => {
-    if (!geometry || geometry.type !== 'LineString') return [];
-    return geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+  // Geometry helpers — robust parsing with fallback to direct lat/lng
+  const getLeafletPositions = (m: any): [number, number][] => {
+    // Primary: parse GeoJSON geometry
+    if (m.geometry && m.geometry.type === 'LineString' && Array.isArray(m.geometry.coordinates) && m.geometry.coordinates.length >= 2) {
+      return m.geometry.coordinates.map((c: number[]) => [c[1], c[0]] as [number, number]);
+    }
+    // Fallback: use pre-extracted depot→zone coordinates from the API
+    if (m.depot_lat != null && m.depot_lng != null && m.zone_lat != null && m.zone_lng != null) {
+      return [[m.depot_lat, m.depot_lng], [m.zone_lat, m.zone_lng]];
+    }
+    return [];
   };
 
   // Only active (non-cancelled, non-pending) missions
@@ -117,8 +129,7 @@ export default function EmbeddedMap({ showSidePanel = false }: EmbeddedMapProps)
 
         {/* Active Mission Routes with start/end markers */}
         {activeMissions.map((m, idx) => {
-          if (!m.geometry) return null;
-          const positions = getLeafletPositions(m.geometry);
+          const positions = getLeafletPositions(m);
           if (positions.length < 2) return null;
 
           const routeColor = STATUS_COLOR[m.status] || '#3b82f6';
