@@ -1,114 +1,90 @@
-<div align="center">
-  <h1>🚨 AI-Based Disaster Response Management System</h1>
-  <h3>Resource Allocation & Relief Coordination (Disaster Bridge)</h3>
-  <p><strong>Springboard Internship 2026 Project</strong></p>
-</div>
+# Disaster Bridge: AI-Based Disaster Response Management System
 
-<br />
+![Disaster Bridge Banner](https://img.shields.io/badge/Disaster-Bridge-indigo?style=for-the-badge&logo=react)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 
-## 📖 Overview
+Disaster Bridge is a state-of-the-art **AI-powered resource allocation and logistics platform** designed to bridge the gap between disaster occurrence and relief dispatch. By combining Machine Learning demand forecasting with advanced geospatial routing, it ensures that critical relief supplies (food, water, medical, shelter) reach affected populations as quickly and efficiently as possible.
 
-**Disaster Bridge** is an intelligent, AI-driven logistics and coordination platform built to streamline and optimize disaster response. During critical emergencies, response times and resource allocations mean the difference between life and death. 
+## 🚀 Key Features
 
-This platform automatically ingests live global disaster alerts (from GDACS, USGS, NDMA), utilizes machine learning models to predict ground-level resource demand (food, water, medical kits, shelter), and orchestrates optimal supply routes using Google OR-Tools and OpenStreetMap (OSRM) data. 
+### 1. AI-Driven Demand Prediction
+* **The Brain:** Utilizes a **Random Forest Regressor** (Machine Learning) to analyze incoming disaster events.
+* **Smart Forecasting:** Automatically predicts the exact quantities of resources needed based on the disaster's severity, alert level, and population exposed.
+* **Result:** Prevents both under-stocking and over-stocking in critical crisis zones.
 
----
+### 2. Smart Logistics & Optimization
+* **Geospatial Intelligence:** Uses **PostgreSQL + PostGIS** (`ST_Distance`) to calculate the exact real-world distances between supply depots and disaster zones.
+* **Optimization Engine:** Integrates **Google OR-Tools** to solve complex resource allocation puzzles, prioritizing the nearest available depots to minimize transit time.
+* **Result:** Generates optimized dispatch missions and routes in seconds.
 
-## ✨ Key Features
+### 3. Real-Time Geospatial Mapping
+* **Live Tracking:** Built with **Leaflet.js**, the platform features a dynamic, interactive map.
+* **Tactical View:** Visualizes disaster events with color-coded alert markers (Red, Orange, Green) and draws live, connected route lines from supply hubs to disaster sites for active missions.
 
-- **📡 Live Incident Ingestion**: Automatically pulls and standardizes live earthquake, flood, and cyclone alerts.
-- **🧠 AI Resource Prediction**: Machine learning (Random Forest model) estimates exact quantities of survival supplies required based on event severity and affected population.
-- **🗺️ Intelligent Routing**: Calculates the fastest delivery routes from supply depots to disaster zones, avoiding blocked roads.
-- **📊 Premium Analytics Dashboard**: Real-time KPI tracking, coverage achievement percentages, and average delivery response times with zero-whitespace premium UI.
-- **📄 Automated PDF Reporting**: Instantly generate professional, branded Post-Event PDF reports using `jsPDF` for stakeholder updates.
-- **🔐 Secure Role-Based Access**: Complete JWT-based authentication system for Field Commanders and Volunteers.
+### 4. Premium Analytics Dashboard
+* **System-Wide Visibility:** Tracks incident coverage across hundreds of global disaster events.
+* **Actionable Insights:** Monitors average resource fill percentages, average response transit times, and highlights unserved critical zones.
+* **Modern UI:** Built with **React and Tailwind CSS** for a high-contrast, data-dense, and highly responsive user experience.
 
----
-
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 **Frontend:**
-- React 18, TypeScript, Vite
-- Tailwind CSS (Premium styling, gradients, micro-animations)
-- Recharts (Data visualization)
-- Leaflet / React-Leaflet (Live map rendering)
-- jsPDF & AutoTable (Report generation)
+* React (TypeScript)
+* Tailwind CSS (Styling & Animations)
+* Vite (Build Tool)
+* Leaflet.js / React-Leaflet (Mapping)
+* Axios (API Communication)
 
 **Backend:**
-- Python 3.10+, FastAPI
-- PostgreSQL + PostGIS (Geospatial data handling)
-- SQLAlchemy & Alembic (ORM & Migrations)
-- Scikit-learn (Random Forest ML predictions)
-- Google OR-Tools (Logistics optimization)
+* Python
+* FastAPI (High-performance API framework)
+* SQLAlchemy (ORM)
+* Scikit-Learn (Random Forest AI)
+* Google OR-Tools (Constraint Programming)
 
----
+**Database:**
+* PostgreSQL
+* PostGIS extension (for spatial/geographic queries)
 
-## 🚀 Local Setup & Installation
+## 📦 Local Development Setup
 
-### 1. Database Requirements
-Ensure you have **PostgreSQL 14+** installed. You must install the **PostGIS** extension to support geographic coordinates and radius calculations.
-
+### 1. Database Setup
+Ensure you have PostgreSQL installed with the PostGIS extension enabled.
 ```sql
-CREATE DATABASE postgres;
-\c postgres
-CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE DATABASE disaster_db;
+\c disaster_db
+CREATE EXTENSION postgis;
 ```
 
-### 2. Backend Initialization
-The backend is powered by FastAPI. Navigate to the `backend` directory:
-
+### 2. Backend Setup
+Navigate to the `backend` directory:
 ```bash
 cd backend
 python -m venv venv
+# Activate virtual environment
+# Windows: venv\Scripts\activate
+# Mac/Linux: source venv/bin/activate
 
-# Activate Virtual Environment
-# Windows:
-.\venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-
-# Install Dependencies
 pip install -r requirements.txt
 
-# Run Database Migrations
-alembic upgrade head
-
-# Start the API Server
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+# Run the server
+uvicorn main:app --reload
 ```
-*API will run on: `http://localhost:8000` (Visit `/docs` for Swagger UI).*
 
-### 3. Frontend Initialization
-The frontend is built with Vite & React. Navigate to the `frontend` directory in a new terminal:
-
+### 3. Frontend Setup
+Navigate to the `frontend` directory:
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-*Web App will run on: `http://localhost:5173`.*
+Access the dashboard at `http://localhost:5173`.
+
+## 🌍 Case Study Highlights
+During testing, this system was deployed against simulated data for the **2026 Nepal Monsoon Floods**. The system successfully ingested real-time flood alerts, quantified the massive population at risk (1.6M+), and autonomously routed massive hygiene and food requirements from cross-border Indian supply depots (Gorakhpur, Patna) directly to the affected zones in Nepal, drastically cutting down manual planning time.
 
 ---
-
-## ⚙️ Triggering the Pipeline (First Run)
-On your first run, the database will be empty. To populate the map, you need to ingest live disaster data and create supply depots.
-
-1. **Ingest GDACS Events:**
-   ```bash
-   curl -X POST http://localhost:8000/api/ingest/gdacs/sync
-   ```
-2. **Ingest USGS Events:**
-   ```bash
-   curl -X POST http://localhost:8000/api/ingest/usgs/sync
-   ```
-3. **Register a Supply Depot:**
-   ```bash
-   curl -X POST -H "Content-Type: application/json" -d '{"resource_type": "water", "quantity": 10000, "unit": "liters", "lat": 28.6139, "lng": 77.2090, "depot_name": "Delhi Central Base"}' http://localhost:8000/api/resources
-   ```
-4. Log in to the frontend Dashboard to view predictions, generate missions, and view the AI's resource routing!
-
----
-
-## 👨‍💻 Developed By
-**Piyush Patil**  
-*Built for the Springboard AI-Based Disaster Response Management System Internship (July 2026).*
+*Built to save lives through data-driven decisions.*
