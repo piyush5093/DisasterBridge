@@ -8,6 +8,18 @@
 
 Disaster Bridge is a state-of-the-art **AI-powered resource allocation and logistics platform** designed to bridge the gap between disaster occurrence and relief dispatch. By combining Machine Learning demand forecasting with advanced geospatial routing, it ensures that critical relief supplies (food, water, medical, shelter) reach affected populations as quickly and efficiently as possible.
 
+<br>
+
+<div align="center">
+  <img src="screenshots/dashboard_1.png" alt="Disaster Bridge Dashboard" width="800">
+  <br><br>
+  <img src="screenshots/dashboard_2.png" alt="Mission Logistics & Routes" width="400">
+  <img src="screenshots/dashboard_3.png" alt="AI Demand Prediction" width="400">
+</div>
+
+<br>
+
+
 ## 🚀 Key Features
 
 ### 1. AI-Driven Demand Prediction
