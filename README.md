@@ -11,10 +11,14 @@ Disaster Bridge is a state-of-the-art **AI-powered resource allocation and logis
 <br>
 
 <div align="center">
-  <img src="screenshots/dashboard_1.png" alt="Disaster Bridge Dashboard" width="800">
+  <img src="screenshots/new_1.png" alt="Commander Portal Authentication" width="800">
   <br><br>
-  <img src="screenshots/dashboard_2.png" alt="Mission Logistics & Routes" width="400">
-  <img src="screenshots/dashboard_3.png" alt="AI Demand Prediction" width="400">
+  <img src="screenshots/new_2.png" alt="Disaster Bridge Dashboard & Map" width="800">
+  <br><br>
+  <img src="screenshots/new_5.png" alt="AI Demand Prediction & Allocation" width="800">
+  <br><br>
+  <img src="screenshots/new_4.png" alt="Active Incident Feed" width="400">
+  <img src="screenshots/new_3.png" alt="Analytics PDF Report" width="400">
 </div>
 
 <br>
